@@ -1,10 +1,17 @@
 .PHONY: lint test scan
 
 lint:
-	python3 -m py_compile tests/test_experiment_record.py
+	for f in $$(find . -name '*.py' -not -path './.git/*'); do \
+		python3 -m py_compile "$$f"; \
+	done
 
 test:
 	python3 -m unittest discover -s tests -v
 
 scan:
-	! grep -RP '(access_token|refresh_token|id_token)[[:space:]]*"?[[:space:]]*[:=][[:space:]]*"?[A-Za-z0-9_.-]+' experiments
+	@found=$$(git ls-files | grep -E '(^|/)\.env$|^.*\.pem$$'); \
+	if [ -n "$$found" ]; then \
+		echo "ERROR: tracked files that should not be tracked:"; \
+		echo "$$found"; \
+		exit 1; \
+	fi
